@@ -1,5 +1,4 @@
 import pandas as pd
-import PySimpleGUI as sg
 import os
 
 class ClassManage:
@@ -124,99 +123,5 @@ class ClassManage:
             return judgeCredit
         elif return_type == "list":
             return judgeCredit.reset_index().values.tolist()
-
-class WindowGUI:
-    def __init__(self, classManage):
-        sg.theme('BlueMono')
-        self.initWindow(classManage)
-
-    def initWindow(self, classManage):
-        yetRegistarClassList = classManage.getYetRegistarClass()
-        registarClassList = classManage.getRegistarClass()
-        registaredAllClassList = classManage.getAllRegistarClass()
-        yetAcquiredClassList = classManage.getYetAcquiredClass()
-        acquiredClassList = classManage.getAcquiredClass()
-        deleteCandidateClass = classManage.getDeleteCandidateClass()
-
-        registarLayout = [
-            [sg.Text('登録したい科目を選択して"登録"ボタンをクリック')],
-            [sg.Combo(values=tuple(yetRegistarClassList), default_value="科目を選択してください", size=(35,1), key="-RegistaredClass-"), 
-            sg.Button("登録")],
-            [sg.Text('削除したい科目を選択して"削除"ボタンをクリック')],
-            [sg.Combo(values=tuple(deleteCandidateClass), default_value="科目を選択してください", size=(35,1), key="-DeleteClass-"), 
-            sg.Button("削除")],
-            [sg.Text("\n".join(registaredAllClassList), key="-RegistaredClassList-")]
-        ]
-
-        acquiredLayout = [
-            [sg.Text('習得した科目を選択して"習得"ボタンをクリック')],
-            [sg.Combo(values=tuple(yetAcquiredClassList), default_value="科目を選択", size=(35,1), key="-AcquiredClass-"), 
-             sg.Combo(values=tuple(["優", "良", "可", "不可"]), default_value="評価を選択", size=(5,1), key="-AcquiredClassEvaluation-"),
-             sg.Button("習得")],
-            [sg.Text("\n".join(acquiredClassList), key="-AcquiredClassList-")]
-        ]
-
-        registaredCreditLayout = [
-            [sg.Table(classManage.judgeClassCredit(return_type="list"), headings=["科目区分", "修了要件", "現単位数", "残単位数"], key="-RegistarTable-")]
-        ]
-
-        initializeLayout = [
-            [sg.Button("データベースを初期化する")]
-        ]
-
-        allLayout = [[sg.TabGroup([[sg.Tab('履修登録', registarLayout),
-                                    sg.Tab('習得単位', acquiredLayout),
-                                    sg.Tab('登録状況', registaredCreditLayout),
-                                    sg.Tab('初期化', initializeLayout),
-                                ]])]]
-
-        self.window = sg.Window('電通大院成績管理システム', allLayout, size=(450, 400))
-
-    def read(self):
-        return self.window.read(timeout=100)
-
-    def renewRegistarTable(self, classManage):
-        registaredAllClassList = classManage.getAllRegistarClass()
-        yetRegistarClassList = classManage.getYetRegistarClass()
-        yetAcquiredClassList = classManage.getYetAcquiredClass()
-        deleteCandidateClass = classManage.getDeleteCandidateClass()
-        self.window["-RegistaredClassList-"].update("\n".join(registaredAllClassList))
-        self.window["-RegistaredClass-"].update(values=tuple(yetRegistarClassList))
-        self.window["-DeleteClass-"].update(values=tuple(deleteCandidateClass))
-        self.window["-AcquiredClass-"].update(values=tuple(yetAcquiredClassList))
-        self.window["-RegistarTable-"].update(classManage.judgeClassCredit(return_type="list"))
-
-    def renewAcquiredTable(self, classManage):
-        acquiredClassList = classManage.getAcquiredClass()
-        yetAcquiredClassList = classManage.getYetAcquiredClass()
-        deleteCandidateClass = classManage.getDeleteCandidateClass()
-        self.window["-AcquiredClassList-"].update("\n".join(acquiredClassList))
-        self.window["-AcquiredClass-"].update(values=tuple(yetAcquiredClassList))
-        self.window["-DeleteClass-"].update(values=tuple(deleteCandidateClass))
-        
-
-def main():
-    l_classManage = ClassManage()
-    window = WindowGUI(l_classManage)
-
-    while True:
-        event, values = window.read()
-        if event == sg.WIN_CLOSED:
-            l_classManage.exportDataBaseCsv()
-            break
-        elif event == "登録":
-            l_classManage.registarClass(values["-RegistaredClass-"])
-            window.renewRegistarTable(l_classManage)
-        elif event == "削除":
-            l_classManage.deleteClass(values["-DeleteClass-"])
-            window.renewRegistarTable(l_classManage)
-        elif event == "習得":
-            l_classManage.acquiredClass(values["-AcquiredClass-"])
-            window.renewAcquiredTable(l_classManage)
-        elif event == "データベースを初期化する":
-            l_classManage.initializeDataBase()
-            window.initWindow(l_classManage)
-
-main()
 
 
